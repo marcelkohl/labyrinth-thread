@@ -18,3 +18,6 @@ Instead of a random move on every iteration, I've implemented a kind of memory t
 
 # Graphics
 The sprites that compose the challenge can be customized as needed.
+
+# Build and running
+I recommend to use [NetBeans](https://netbeans.apache.org/download/nb124/nb124.html) to build and run the project but you can use your preferred tool. Just open the project folder and run.
