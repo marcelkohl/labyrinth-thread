@@ -1,8 +1,7 @@
 package Model;
 
 /**
- *
- * @author Proprietário
+ * @author Marcel V. Kohls
  */
 public class TurningPoint {
     private int contaDesvio=0;
@@ -10,18 +9,13 @@ public class TurningPoint {
     private int[] pontoLinha=new int[1000];
     private Boolean[] pontoAtivo=new Boolean[1000];
 
-    //construtor da classe
-    public void PontoDesvio(){
+    public void TurningPoint(){
         contaDesvio = 0;
     }
 
-    /*
-     * adiciona ponto de desvio na lista de desvios
-     */
-    public void addPontoDesvio(int posColuna, int posLinha){
+    public void addTurningPoint(int posColuna, int posLinha){
         Boolean encontrou = false;
 
-        //verifica se ponto ja nao existe
         for (int todPontos=0; todPontos < contaDesvio; todPontos++){
             if (pontoColuna[todPontos] == posColuna && pontoLinha[todPontos] == posLinha){
                 encontrou = true;
@@ -38,10 +32,7 @@ public class TurningPoint {
         }
     }
 
-    /**
-     * marca como inativo um ponto de desvio previamente cadastrado
-     */
-    public void inativaPontoDesvio(int posColuna, int posLinha){
+    public void disableTurningPoint(int posColuna, int posLinha){
         for(int todPontos=0; todPontos < contaDesvio; todPontos++){
             if (pontoColuna[todPontos] == posColuna && pontoLinha[todPontos] == posLinha){
                 pontoAtivo[todPontos] = false;
@@ -49,11 +40,7 @@ public class TurningPoint {
         }
     }
 
-    /**
-     *
-     * @return o proximo ponto de desvio que esteja ativo, sendo o primeiro registro da matriz como a coluna e o segundo como a linha
-     */
-    public int[] getProximoPonto(){
+    public int[] getNextPoint(){
         int[] retorno = new int[2];
 
         //procura o proximo desvio ativo
@@ -73,5 +60,4 @@ public class TurningPoint {
 
         return retorno;
     }
-
 }

@@ -143,10 +143,10 @@ public class Map {
                 // se minha posicao atual nao me permite andar em mais nenhuma direcao, entao marca este ponto de desvio como invalido
                 if (actualDirection == DIR_NONE){
                     // inativa ponto de desvio
-                    turningPoints.inativaPontoDesvio(contaHorizontal, contaVertical);
+                    turningPoints.disableTurningPoint(contaHorizontal, contaVertical);
 
                     //encontra novo ponto de desvio ativo
-                    novoPonto = turningPoints.getProximoPonto();
+                    novoPonto = turningPoints.getNextPoint();
 
                     //se nao exite outro ponto de desvio, oportunidades acabaram. fim do mapa
                     if (novoPonto[0] == -1 && novoPonto[1] == -1){
@@ -296,7 +296,7 @@ public class Map {
         }// fim da conferencia da nova possivel direcao
 
         if (retorno != DIR_NONE){
-            turningPoints.addPontoDesvio(atualColuna, atualLinha);
+            turningPoints.addTurningPoint(atualColuna, atualLinha);
         }
 
         //marca ponto de onde saimos. Se tiver uma mudanca de rota, remarcamos este ponto.
