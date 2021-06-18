@@ -17,7 +17,7 @@ The labyrinth is randomly generated on demand and it is based on the [Randomized
 Instead of a random move on every iteration, I've implemented a kind of memory to track the paths were it already passed, so the decision made is based on the less traveled path first;
 
 # Graphics
-The sprites that compose the challenge can be customized as needed.
+The sprites that compose the project can be customized as needed.
 
 ![Screenshot 02](https://github.com/marcelkohl/labyrinth-thread/blob/main/demo2.png?raw=true)
 
