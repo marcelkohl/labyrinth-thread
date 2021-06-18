@@ -6,7 +6,7 @@
 # labyrinth-thread
 Java project making use of threads
 
-![Screenshot 01](https://github.com/marcelkohl/labyrinth-thread/blob/master/demo.png?raw=true)
+![Screenshot 01](https://github.com/marcelkohl/labyrinth-thread/blob/main/demo.png?raw=true)
 
 Making use of threads this small project draws a random labyrinth and allows multiple independent characters to find the path to the final point;
 
