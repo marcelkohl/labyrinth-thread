@@ -73,7 +73,7 @@ public class Hero extends Thread {
     }
     
     private void resetMapPath() {
-                for (int allCol=0; allCol<100; allCol++){
+        for (int allCol=0; allCol<100; allCol++){
             for (int allRow=0; allRow<100; allRow++){
                 mapPath[allCol][allRow] = 0;
             }
@@ -88,7 +88,7 @@ public class Hero extends Thread {
         for (int colCount=0; colCount <= personalMap.getMaxColumns(); colCount++){
             for (int rowCount=0; rowCount <= personalMap.getMaxRows(); rowCount++){
 
-                if (isPositionSet == false && personalMap.getMapBlock(colCount,rowCount) == 99){
+                if (isPositionSet == false && personalMap.getMapBlock(colCount,rowCount) == Map.START){
                     actualColumn = colCount;
                     actualLine = rowCount;
 
@@ -107,7 +107,7 @@ public class Hero extends Thread {
         int sumCol = 0, sumRow = 0;
 
         // starting block, just walk to the right 
-        if (personalMap.getMapBlock(actualColumn, actualLine) == 99){
+        if (personalMap.getMapBlock(actualColumn, actualLine) == Map.START){
             sumCol = 1;
         } else if (personalMap.getMapBlock(actualColumn, actualLine) == 0){
             if (valueRight < valueLeft){

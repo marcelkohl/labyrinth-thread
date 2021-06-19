@@ -4,60 +4,59 @@ package Model;
  * @author Marcel V. Kohls
  */
 public class TurningPoint {
-    private int contaDesvio=0;
-    private int[] pontoColuna=new int[1000];
-    private int[] pontoLinha=new int[1000];
-    private Boolean[] pontoAtivo=new Boolean[1000];
+    private int turnCounter=0;
+    private int[] colPoint=new int[1000];
+    private int[] rowPoint=new int[1000];
+    private Boolean[] activePoint=new Boolean[1000];
 
     public void TurningPoint(){
-        contaDesvio = 0;
+        turnCounter = 0;
     }
 
-    public void addTurningPoint(int posColuna, int posLinha){
-        Boolean encontrou = false;
+    public void addTurningPoint(int colPos, int rowPos){
+        Boolean foundIt = false;
 
-        for (int todPontos=0; todPontos < contaDesvio; todPontos++){
-            if (pontoColuna[todPontos] == posColuna && pontoLinha[todPontos] == posLinha){
-                encontrou = true;
+        for (int allPoints=0; allPoints < turnCounter; allPoints++){
+            if (colPoint[allPoints] == colPos && rowPoint[allPoints] == rowPos){
+                foundIt = true;
             }
         }
 
-        //se nao existe, entao inclui
-        if (encontrou == false){
-            pontoColuna[contaDesvio] = posColuna;
-            pontoLinha[contaDesvio] = posLinha;
-            pontoAtivo[contaDesvio] = true;
+        if (foundIt == false){
+            colPoint[turnCounter] = colPos;
+            rowPoint[turnCounter] = rowPos;
+            activePoint[turnCounter] = true;
 
-            contaDesvio++;
+            turnCounter++;
         }
     }
 
-    public void disableTurningPoint(int posColuna, int posLinha){
-        for(int todPontos=0; todPontos < contaDesvio; todPontos++){
-            if (pontoColuna[todPontos] == posColuna && pontoLinha[todPontos] == posLinha){
-                pontoAtivo[todPontos] = false;
+    public void disableTurningPoint(int colPos, int rowPos){
+        for(int allPoints=0; allPoints < turnCounter; allPoints++){
+            if (colPoint[allPoints] == colPos && rowPoint[allPoints] == rowPos){
+                activePoint[allPoints] = false;
             }
         }
     }
 
     public int[] getNextPoint(){
-        int[] retorno = new int[2];
+        int[] nextPoint = new int[2];
 
-        //procura o proximo desvio ativo
-        retorno[0] = -1;
-        retorno[1] = -1;
+        //look for the next active
+        nextPoint[0] = -1;
+        nextPoint[1] = -1;
 
-        int todDesvio = 0;
+        int allTurns = 0;
 
-        while (todDesvio < contaDesvio && retorno[1]==-1){
-            if (pontoAtivo[todDesvio] == true){
-                retorno[0] = pontoColuna[todDesvio];
-                retorno[1] = pontoLinha[todDesvio];
+        while (allTurns < turnCounter && nextPoint[1]==-1){
+            if (activePoint[allTurns] == true){
+                nextPoint[0] = colPoint[allTurns];
+                nextPoint[1] = rowPoint[allTurns];
             }
 
-            todDesvio++;
+            allTurns++;
         }
 
-        return retorno;
+        return nextPoint;
     }
 }

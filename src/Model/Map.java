@@ -5,6 +5,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import javax.imageio.ImageIO;
 import java.util.Random;
+import java.util.HashMap;
 
 /**
  * @author Marcel Vinicius Kohls
@@ -13,6 +14,8 @@ public class Map {
     static int BLOCK_SIZE = 34;
     static int STEP_INTERVAL = 6;
 
+    static int NEVER_STEPPED = -1;
+    
     static int DIR_NONE = 0;
     static int DIR_UP = 1;
     static int DIR_DOWN = 2;
@@ -27,68 +30,62 @@ public class Map {
 
     private Boolean isFinishSet = false;
 
-    private BufferedImage grama;
-    private BufferedImage inicio;
-    private BufferedImage chegada1;
-    private BufferedImage chegada2;
-    private BufferedImage chegada3;
-    private BufferedImage chegada4;
-    private BufferedImage terra0;
-    private BufferedImage terra1;
-    private BufferedImage terra2;
-    private BufferedImage terra3;
-    private BufferedImage terra4;
-    private BufferedImage terra6;
-    private BufferedImage terra5;
-    private BufferedImage terra7;
-    private BufferedImage terra8;
-    private BufferedImage terra9;
-    private BufferedImage terra10;
-    private BufferedImage terra11;
-    private BufferedImage terra12;
-    private BufferedImage terra13;
-    private BufferedImage terra14;
-
     private int[][] globalMap;
 
     private TurningPoint turningPoints = new TurningPoint();
     private Random rnd = new Random();
+    
+    static int FLOOR_LR = 0, FLOOR_LU = 1, FLOOR_UD = 2, FLOOR_LD = 3, FLOOR_LDR = 4,
+        FLOOR_DR = 5, FLOOR_DRU = 6, FLOOR_RU = 7, FLOOR_LRU = 8, FLOOR_LDRU = 9,
+        FLOOR_LDU = 10, FLOOR_D = 11, FLOOR_U = 12, FLOOR_L = 13,  FLOOR_R = 14,
+        GRASS=15, START=16, FINISH_R=17, FINISH_L=18, FINISH_U=19, FINISH_D=20;
+
+    private BufferedImage[] images = new BufferedImage[21];
+
+    HashMap<Integer, String> imageNames = new HashMap<Integer, String>();
 
     public Map(int rows, int cols){
-        try {
-            grama = ImageIO.read(new File("Theme/grass.png"));
-            inicio = ImageIO.read(new File("Theme/start.png"));
-            chegada1= ImageIO.read(new File("Theme/finish1.png"));
-            chegada2= ImageIO.read(new File("Theme/finish2.png"));
-            chegada3= ImageIO.read(new File("Theme/finish3.png"));
-            chegada4= ImageIO.read(new File("Theme/finish4.png"));
-            terra0 = ImageIO.read(new File("Theme/floor-lr.png"));
-            terra1 = ImageIO.read(new File("Theme/floor-lu.png"));
-            terra2 = ImageIO.read(new File("Theme/floor-ud.png"));
-            terra3 = ImageIO.read(new File("Theme/floor-ld.png"));
-            terra4 = ImageIO.read(new File("Theme/floor-ldr.png"));
-            terra5 = ImageIO.read(new File("Theme/floor-dr.png"));
-            terra6 = ImageIO.read(new File("Theme/floor-dru.png"));
-            terra7 = ImageIO.read(new File("Theme/floor-ru.png"));
-            terra8 = ImageIO.read(new File("Theme/floor-lru.png"));
-            terra9 = ImageIO.read(new File("Theme/floor-ldru.png"));
-            terra10 = ImageIO.read(new File("Theme/floor-ldu.png"));
-            terra11 = ImageIO.read(new File("Theme/floor-d.png"));
-            terra12 = ImageIO.read(new File("Theme/floor-u.png"));
-            terra13 = ImageIO.read(new File("Theme/floor-l.png"));
-            terra14 = ImageIO.read(new File("Theme/floor-r.png"));
-        } catch (Exception e) {
-            // show error msgs
-        }
-
+        setupImages();
+        
         maxRows  = rows;
         maxCols = cols;
-
         globalMap = new int[100][100];
 
         this.generateDepthMap();
     }
 
+    private void setupImages() {
+        imageNames.put(FLOOR_LR, "floor-lr");   // 0
+        imageNames.put(FLOOR_LU, "floor-lu");   // 1
+        imageNames.put(FLOOR_UD, "floor-ud");   // 2
+        imageNames.put(FLOOR_LD, "floor-ld");   // 3
+        imageNames.put(FLOOR_LDR, "floor-ldr"); // 4
+        imageNames.put(FLOOR_DR, "floor-dr");   // 5
+        imageNames.put(FLOOR_DRU, "floor-dru"); // 6
+        imageNames.put(FLOOR_RU, "floor-ru");   // 7
+        imageNames.put(FLOOR_LRU, "floor-lru"); // 8
+        imageNames.put(FLOOR_LDRU, "floor-ldru"); // 9
+        imageNames.put(FLOOR_LDU, "floor-ldu"); // 10
+        imageNames.put(FLOOR_D, "floor-d");     // 11
+        imageNames.put(FLOOR_U, "floor-u");     // 12
+        imageNames.put(FLOOR_L, "floor-l");     // 13
+        imageNames.put(FLOOR_R, "floor-r");     // 14
+        imageNames.put(GRASS, "grass");
+        imageNames.put(START, "start");         // 99
+        imageNames.put(FINISH_R, "finish-r");   // 95
+        imageNames.put(FINISH_L, "finish-l");   // 96
+        imageNames.put(FINISH_U, "finish-u");   // 97
+        imageNames.put(FINISH_D, "finish-d");   // 98
+                
+        try {
+            for (int imgIndex=0; imgIndex < imageNames.size(); imgIndex++){
+                images[imgIndex] = ImageIO.read(new File("Theme/" + imageNames.get(imgIndex) + ".png"));                
+            }            
+        } catch (Exception e) {
+            System.out.println("Something went wrong on loading sprites");
+        }
+    }
+    
     public int getMaxRows(){
         return maxRows;
     }
@@ -105,14 +102,14 @@ public class Map {
         if (colPos >= 0 && rowPos >= 0 && colPos <= maxCols && rowPos <= maxRows){
             return globalMap[colPos][rowPos];
         } else {
-            return -1;
+            return NEVER_STEPPED;
         }
     }
 
     private void resetGlobalMap() {
-        for (int todcol=0; todcol<=maxCols; todcol++){
-            for (int todlin=0; todlin<=maxRows; todlin++){
-                globalMap[todcol][todlin] = -1;
+        for (int colCount = 0; colCount <= maxCols; colCount++){
+            for (int rowCount = 0; rowCount <= maxRows; rowCount++){
+                globalMap[colCount][rowCount] = NEVER_STEPPED;
             }
         }
     }
@@ -120,380 +117,250 @@ public class Map {
     public void generateDepthMap(){
         resetGlobalMap();
 
-        //comeca a trilha
-        int contaHorizontal = 0;
-        int contaVertical = this.RandomInRange(1, maxRows-1, rnd);
-        int novoPasso;
-        int[] novoPonto;
-        Boolean oportunidade = true;
-        Boolean marcouInicio = false;
+        int horCounter = 0;
+        int verCounter = this.RandomInRange(1, maxRows-1, rnd);
+        int newStep;
+        int[] newPoint;
+        Boolean isNotFinished = true;
+        Boolean isStartSet = false;
 
         actualDirection = DIR_RIGHT;
         imgSpot = 1;
 
-        while (oportunidade == true){
-            int proxDesvio = this.RandomInRange(1, 6, rnd);
-            int contaDesvio = 0;
+        while (isNotFinished == true){
+            int nextTurn = this.RandomInRange(1, 6, rnd);
+            int turnCounter = 0;
 
-            // percorre caminho até a marcação do próximo caminho
-            while (contaDesvio <= proxDesvio){
+            while (turnCounter <= nextTurn){
+                newStep = this.keepGoing(horCounter, verCounter);
 
-                novoPasso = this.continuarCaminho(contaHorizontal, contaVertical);
-
-                // se minha posicao atual nao me permite andar em mais nenhuma direcao, entao marca este ponto de desvio como invalido
                 if (actualDirection == DIR_NONE){
-                    // inativa ponto de desvio
-                    turningPoints.disableTurningPoint(contaHorizontal, contaVertical);
+                    turningPoints.disableTurningPoint(horCounter, verCounter);
 
-                    //encontra novo ponto de desvio ativo
-                    novoPonto = turningPoints.getNextPoint();
+                    newPoint = turningPoints.getNextPoint();
 
-                    //se nao exite outro ponto de desvio, oportunidades acabaram. fim do mapa
-                    if (novoPonto[0] == -1 && novoPonto[1] == -1){
-                        oportunidade = false;
-                        contaDesvio = proxDesvio +1; //para sair do laco de contador de desvio
+                    if (newPoint[0] == -1 && newPoint[1] == -1){
+                        isNotFinished = false;
+                        turnCounter = nextTurn +1; //para sair do laco de contador de desvio
                     } else {
-                        contaHorizontal = novoPonto[0];
-                        contaVertical = novoPonto[1];
+                        horCounter = newPoint[0];
+                        verCounter = newPoint[1];
                         actualDirection = DIR_NONE;
-                        actualDirection = this.novaDirecao(contaHorizontal, contaVertical);
+                        actualDirection = this.newDirection(horCounter, verCounter);
                     }
 
-                }
-                // se nao puder mais andar para o camimnho que estava andando, entao descobre uma nova direcao]
-                else if(novoPasso == 0){
-                    actualDirection = this.novaDirecao(contaHorizontal, contaVertical);
-                }
-                // senao, continua andando
-                else {
-                    //incrementa o deslocamento para podermos sair do lugar
+                } else if(newStep == 0){
+                    actualDirection = this.newDirection(horCounter, verCounter);
+                } else {
                     if (actualDirection == DIR_RIGHT || actualDirection == DIR_LEFT){
-                        contaHorizontal = contaHorizontal + novoPasso;
+                        horCounter = horCounter + newStep;
                         imgSpot = 0;
-                    }
-                    else if (actualDirection == DIR_UP || actualDirection == DIR_DOWN){
-                        contaVertical = contaVertical + novoPasso;
+                    } else if (actualDirection == DIR_UP || actualDirection == DIR_DOWN){
+                        verCounter = verCounter + newStep;
                         imgSpot = 2;
                     }
 
-                    if (marcouInicio == false){
-                        marcouInicio = true;
-                        imgSpot = 99;
+                    if (isStartSet == false){
+                        isStartSet = true;
+                        imgSpot = START;
                     }
 
-                    // marca este ponto que acabamos de entrar na matriz
-                    globalMap[contaHorizontal][contaVertical] = imgSpot;
+                    globalMap[horCounter][verCounter] = imgSpot;
 
-                    contaDesvio++;
-
-                }//fim do marca passo andado
-
-            } // fim do laco do desvio
-
-            // cada vez q chegamos no desvio, decidimos uma nova direçao
-            actualDirection = this.novaDirecao(contaHorizontal, contaVertical);
-
-       }// fim do laco que faz o labirinto
+                    turnCounter++;
+                }
+            }
+            
+            actualDirection = this.newDirection(horCounter, verCounter);
+       }
         
-      this.setPontoFinal();
-    }// fim do metodo que desenha o mapa por profundidade
+      this.setFinalPoint();
+    }
 
-    /**
-     * define o ponto final na matriz do mapa
-     */
-    public void setPontoFinal(){
-        int posOpcional = 0;
-        int todColuna = maxCols;
-        Boolean marcou = false;
+    public void setFinalPoint(){
+        int colCount = maxCols;
+        Boolean isFinalSet = false;
 
-        //procura um ponto final que seja um terminador
-        while (marcou == false && todColuna > 0){
-            for (int todLinha = 0; todLinha <= maxRows; todLinha++){
-                if (marcou == false && globalMap[todColuna][todLinha] == 11){
-                    System.out.println("fim 11");
-                    globalMap[todColuna][todLinha] = 98;
-                    marcou = true;
+        while (isFinalSet == false && colCount > 0){
+            for (int rowCount = 0; rowCount <= maxRows; rowCount++){
+                if (isFinalSet == false) {
+                   if (globalMap[colCount][rowCount] == FLOOR_D) {
+                        globalMap[colCount][rowCount] = FINISH_D;
+                        isFinalSet = true;
+                    } else if(globalMap[colCount][rowCount] == FLOOR_U) {
+                        globalMap[colCount][rowCount] = FINISH_U;
+                        isFinalSet = true;
+                    } else if (globalMap[colCount][rowCount] == FLOOR_L){
+                        globalMap[colCount][rowCount] = FINISH_L;
+                        isFinalSet = true;
+                    } else if (globalMap[colCount][rowCount] == FLOOR_R){
+                        globalMap[colCount][rowCount] = FINISH_R;
+                        isFinalSet = true;
+                    }
                 }
-                else if(marcou == false && globalMap[todColuna][todLinha] == 12)
-                {
-                    System.out.println("fim 12");
-                    globalMap[todColuna][todLinha] = 97;
-                    marcou = true;
-                }
-                if (marcou == false && globalMap[todColuna][todLinha] == 13){
-                    System.out.println("fim 13");
-                    globalMap[todColuna][todLinha] = 96;
-                    marcou = true;
-                }
-                if (marcou == false && globalMap[todColuna][todLinha] == 14){
-                    System.out.println("fim 14");
-                    globalMap[todColuna][todLinha] = 95;
-                    marcou = true;
-                }
+            }
 
-            }//fim do for das linhas q procuram o final
-
-            todColuna--;
-        }// fim do while de colunas q procuram o final
-
-    }// fim do metodo que encontra o ponto final
+            colCount--;
+        }
+    }
 
     /*
-     * defina uma nova direcao para o gerador do mapa por profundidade. se retornar DIR_NONE, entao e porque nao tem mais caminhos e o mapa deverá finalizar o processo de criação
+     * @return returns DIR_NONE is there is no more directions to go
      */
-    public int novaDirecao(int atualColuna, int atualLinha){
-        Boolean tentaDir=false;
-        Boolean tentaEsq=false;
-        Boolean tentaCima=false;
-        Boolean tentaBaix=false;
-        int retorno = DIR_NONE;
-        int direcao;
-        int velhaDirecao = actualDirection;
+    public int newDirection(int actualCol, int actualRow){
+        Boolean tryRight=false;
+        Boolean tryLeft=false;
+        Boolean tryUp=false;
+        Boolean tryDown=false;
+        int newDirection = DIR_NONE;
+        int directionToTry;
+        int oldDirection = actualDirection;
 
 
-        //define a direcao atual como true. problemas se nao fizer isso
+        // force to try actual direction
         if (actualDirection == DIR_UP){
-            tentaCima = true;
+            tryUp = true;
         }
         else if (actualDirection == DIR_DOWN){
-            tentaBaix = true;
+            tryDown = true;
         }
         else if (actualDirection == DIR_LEFT){
-            tentaEsq = true;
+            tryLeft = true;
         }
         else if (actualDirection == DIR_RIGHT){
-            tentaDir = true;
+            tryRight = true;
         }
 
-        //agora sim procura a nova direcao, ja desconsiderando a atual direcao
-        while (retorno == DIR_NONE && (tentaDir==false || tentaEsq==false || tentaCima==false || tentaBaix==false)){
-            direcao = this.RandomInRange(1,4,rnd);
+        // first try other directions, and check if the new one will not exceed the edges
+        while (newDirection == DIR_NONE && (tryRight == false || tryLeft == false || tryUp == false || tryDown == false)){
+            directionToTry = this.RandomInRange(1, 4, rnd);
 
-            if (direcao != actualDirection) {
-                retorno = direcao;
+            if (directionToTry != actualDirection) {
+                newDirection = directionToTry;
             }
 
             // marca as tentativas q nao pode mais ir
-            if (direcao == DIR_LEFT && (atualColuna-1 == 0 || globalMap[atualColuna-1][atualLinha] != -1) ){
-                tentaEsq=true;
-                retorno = DIR_NONE;
-            }
-
-            else if (direcao == DIR_RIGHT && (atualColuna+1 == maxCols || globalMap[atualColuna+1][atualLinha] != -1)){
-                tentaDir=true;
-                retorno = DIR_NONE;
-            }
-
-            else if (direcao == DIR_UP && (atualLinha-1 == 0 || globalMap[atualColuna][atualLinha-1] != -1)){
-                tentaCima=true;
-                retorno = DIR_NONE;
-            }
-
-            else if (direcao == DIR_DOWN && (atualLinha+1 == maxRows || globalMap[atualColuna][atualLinha+1] != -1)){
-                tentaBaix=true;
-                retorno = DIR_NONE;
-            }
-        }// fim da conferencia da nova possivel direcao
-
-        if (retorno != DIR_NONE){
-            turningPoints.addTurningPoint(atualColuna, atualLinha);
-        }
-
-        //marca ponto de onde saimos. Se tiver uma mudanca de rota, remarcamos este ponto.
-        if (velhaDirecao == DIR_NONE){
-            if (globalMap[atualColuna][atualLinha] == 5 && retorno == DIR_UP){
-                globalMap[atualColuna][atualLinha] = 6;
-            }
-            else if (globalMap[atualColuna][atualLinha] == 5 && retorno == DIR_LEFT){
-                globalMap[atualColuna][atualLinha] = 4;
-            }
-            else if (globalMap[atualColuna][atualLinha] == 7 && retorno == DIR_DOWN){
-                globalMap[atualColuna][atualLinha] = 6;
-            }
-            else if (globalMap[atualColuna][atualLinha] == 7 && retorno == DIR_LEFT){
-                globalMap[atualColuna][atualLinha] = 8;
-            }
-            else if (globalMap[atualColuna][atualLinha] == 1 && retorno == DIR_RIGHT){
-                globalMap[atualColuna][atualLinha] = 8;
-            }
-            else if (globalMap[atualColuna][atualLinha] == 1 && retorno == DIR_DOWN){
-                globalMap[atualColuna][atualLinha] = 10;
-            }
-            else if (globalMap[atualColuna][atualLinha] == 3 && retorno == DIR_UP){
-                globalMap[atualColuna][atualLinha] = 10;
-            }
-            else if (globalMap[atualColuna][atualLinha] == 3 && retorno == DIR_RIGHT){
-                globalMap[atualColuna][atualLinha] = 4;
-            }
-            else if (retorno != DIR_NONE && (globalMap[atualColuna][atualLinha] == 6 || globalMap[atualColuna][atualLinha] == 8 || globalMap[atualColuna][atualLinha] == 10 || globalMap[atualColuna][atualLinha] == 4)){
-                globalMap[atualColuna][atualLinha] = 9;
-            }
-
-        }
-
-        else if(retorno == DIR_RIGHT){
-            if (velhaDirecao == DIR_UP){
-                globalMap[atualColuna][atualLinha] = 5;
-            }
-            else if (velhaDirecao == DIR_DOWN){
-                globalMap[atualColuna][atualLinha] = 7;
+            if (directionToTry == DIR_LEFT && (actualCol - 1 == 0 || globalMap[actualCol - 1][actualRow] != NEVER_STEPPED) ){
+                tryLeft=true;
+                newDirection = DIR_NONE;
+            } else if (directionToTry == DIR_RIGHT && (actualCol + 1 == maxCols || globalMap[actualCol + 1][actualRow] != NEVER_STEPPED)){
+                tryRight=true;
+                newDirection = DIR_NONE;
+            } else if (directionToTry == DIR_UP && (actualRow - 1 == 0 || globalMap[actualCol][actualRow - 1] != NEVER_STEPPED)){
+                tryUp=true;
+                newDirection = DIR_NONE;
+            } else if (directionToTry == DIR_DOWN && (actualRow + 1 == maxRows || globalMap[actualCol][actualRow + 1] != NEVER_STEPPED)){
+                tryDown=true;
+                newDirection = DIR_NONE;
             }
         }
-        else if (retorno == DIR_LEFT){
-            if (velhaDirecao == DIR_UP){
-                globalMap[atualColuna][atualLinha] = 3;
-            }
-            else if (velhaDirecao == DIR_DOWN){
-                globalMap[atualColuna][atualLinha] = 1;
-            }
-        }
-        else if (retorno == DIR_UP){
-            if (velhaDirecao == DIR_RIGHT){
-                globalMap[atualColuna][atualLinha] = 1;
-            }
-            else if (velhaDirecao == DIR_LEFT){
-                globalMap[atualColuna][atualLinha] = 7;
-            }
-        }
-        else if (retorno == DIR_DOWN){
-            if (velhaDirecao == DIR_RIGHT){
-                globalMap[atualColuna][atualLinha] = 3;
-            }
-            else if (velhaDirecao == DIR_LEFT){
-                globalMap[atualColuna][atualLinha] = 5;
-            }
-        }
-        else if (retorno == DIR_NONE){
-            if (velhaDirecao == DIR_DOWN){
-                globalMap[atualColuna][atualLinha] = 12;
-            }
-            else if (velhaDirecao == DIR_UP){
-                globalMap[atualColuna][atualLinha] = 11;
-            }
-            else if(velhaDirecao == DIR_RIGHT){
-                globalMap[atualColuna][atualLinha] = 13;
-            }
-            else if(velhaDirecao == DIR_LEFT){
-                globalMap[atualColuna][atualLinha] = 14;
-            }
 
+        if (newDirection != DIR_NONE){
+            turningPoints.addTurningPoint(actualCol, actualRow);
         }
 
-       //define nova direcao
+        // marks the point where we left. If you have a change of route, we will remark this point.
+        int actualInGlobalMap = globalMap[actualCol][actualRow];
+        int newInGlobalMap = DIR_NONE;
+        
+        if (oldDirection == DIR_NONE){
+            if (actualInGlobalMap == FLOOR_DR && newDirection == DIR_UP){
+                newInGlobalMap = FLOOR_DRU;
+            } else if (actualInGlobalMap == FLOOR_DR && newDirection == DIR_LEFT){
+                newInGlobalMap = FLOOR_LDR;
+            } else if (actualInGlobalMap == FLOOR_RU && newDirection == DIR_DOWN){
+                newInGlobalMap = FLOOR_DRU;
+            } else if (actualInGlobalMap == FLOOR_RU && newDirection == DIR_LEFT){
+                newInGlobalMap = FLOOR_LRU;
+            } else if (actualInGlobalMap == FLOOR_LU && newDirection == DIR_RIGHT){
+                newInGlobalMap = FLOOR_LRU;
+            } else if (actualInGlobalMap == FLOOR_LU && newDirection == DIR_DOWN){
+                newInGlobalMap = FLOOR_LDU;
+            } else if (actualInGlobalMap == FLOOR_LD && newDirection == DIR_UP){
+                newInGlobalMap = FLOOR_LDU;
+            } else if (actualInGlobalMap == FLOOR_LD && newDirection == DIR_RIGHT){
+                newInGlobalMap = FLOOR_LDR;
+            } else if (newDirection != DIR_NONE && (actualInGlobalMap == FLOOR_DRU || actualInGlobalMap == FLOOR_LRU || actualInGlobalMap == FLOOR_LDU || actualInGlobalMap == FLOOR_LDR)){
+                newInGlobalMap = FLOOR_LDRU;
+            }
+        } else if (newDirection == DIR_RIGHT){
+            if (oldDirection == DIR_UP){
+                newInGlobalMap = FLOOR_DR;
+            } else if (oldDirection == DIR_DOWN){
+                newInGlobalMap = FLOOR_RU;
+            }
+        } else if (newDirection == DIR_LEFT){
+            if (oldDirection == DIR_UP){
+                newInGlobalMap = FLOOR_LD;
+            } else if (oldDirection == DIR_DOWN){
+                newInGlobalMap = FLOOR_LU;
+            }
+        } else if (newDirection == DIR_UP){
+            if (oldDirection == DIR_RIGHT){
+                newInGlobalMap = FLOOR_LU;
+            } else if (oldDirection == DIR_LEFT){
+                newInGlobalMap = FLOOR_RU;
+            }
+        } else if (newDirection == DIR_DOWN){
+            if (oldDirection == DIR_RIGHT){
+                newInGlobalMap = FLOOR_LD;
+            } else if (oldDirection == DIR_LEFT){
+                newInGlobalMap = FLOOR_DR;
+            }
+        } else if (newDirection == DIR_NONE){
+            if (oldDirection == DIR_DOWN){
+                newInGlobalMap = FLOOR_U;
+            } else if (oldDirection == DIR_UP){
+                newInGlobalMap = FLOOR_D;
+            } else if(oldDirection == DIR_RIGHT){
+                newInGlobalMap = FLOOR_L;
+            } else if(oldDirection == DIR_LEFT){
+                newInGlobalMap = FLOOR_R;
+            }
+        }
+        
+        if (newInGlobalMap != DIR_NONE) {
+            globalMap[actualCol][actualRow] = newInGlobalMap;
+        }
 
-        return retorno;
-    }// fim do metodo nova direcao
+        return newDirection;
+    }
 
     /*
-     * identifica se o proximo ponto do caminho q esta seguindo, pode ser marcado (se nao tem obstaculos ou fim da matriz). retorna +1 ou -1 dependendo de para onde o caminho esta indo. retorna 0 quando puder continuar
+     * identify if the next point on the path you are following can be marked 
+     * (if it has no obstacles or the end of the matrix). returns +1 or -1 
+     * depending on where the path is going. returns 0 when you can continue 
      */
-    public int continuarCaminho(int atualColuna, int atualLinha){
-        int retorno = 0;
+    public int keepGoing(int actualCol, int actualRow){
+        int stepInDirection = 0;
 
-        if (actualDirection == DIR_RIGHT && atualColuna < maxCols && globalMap[atualColuna+1][atualLinha] == -1){
-            retorno = 1;
-        }
-        else if(actualDirection == DIR_LEFT && atualColuna > 1 && globalMap[atualColuna-1][atualLinha] == -1)
-        {
-            retorno = -1;
-        }
-        else if (actualDirection == DIR_UP && atualLinha > 1 && globalMap[atualColuna][atualLinha-1] == -1){
-            retorno = -1;
-        }
-        else if (actualDirection == DIR_DOWN && atualLinha < (maxRows-1) && globalMap[atualColuna][atualLinha+1] == -1){
-            retorno = 1;
+        if (actualDirection == DIR_RIGHT && actualCol < maxCols && globalMap[actualCol + 1][actualRow] == NEVER_STEPPED){
+            stepInDirection = 1;
+        } else if(actualDirection == DIR_LEFT && actualCol > 1 && globalMap[actualCol - 1][actualRow] == NEVER_STEPPED){
+            stepInDirection = -1;
+        } else if (actualDirection == DIR_UP && actualRow > 1 && globalMap[actualCol][actualRow - 1] == NEVER_STEPPED){
+            stepInDirection = -1;
+        } else if (actualDirection == DIR_DOWN && actualRow < (maxRows-1) && globalMap[actualCol][actualRow + 1] == NEVER_STEPPED){
+            stepInDirection = 1;
         }
 
-        return retorno;
-
+        return stepInDirection;
     }
 
-    /**
-     * atualiza o desenho do mapa
-     */
-    public void atualizaMapa(Graphics areaG){
-        for(int todcol=0; todcol<=maxCols; todcol++){
-            for(int todlin=0; todlin<=maxRows; todlin++){
-                drawBlock(areaG, todcol, todlin, globalMap[todcol][todlin]);
+    public void updateMap(Graphics areaG){
+        for(int colCount=0; colCount<=maxCols; colCount++){
+            for(int rowCount=0; rowCount<=maxRows; rowCount++){
+                drawBlock(areaG, colCount, rowCount, globalMap[colCount][rowCount]);
             }
         }
     }
 
-    /**
-     * desenha o bloco na tela conforme coordenada e identificacao passadas como parametro
-     * @param coluna desejada
-     * @param linha desejada
-     * @param identificacao do bloco (0-14)
-     */
-    public void drawBlock(Graphics gfx, int posCol, int posLin, int idBloco){
-        BufferedImage imgBloco;
-
-        if (idBloco == 0){
-            imgBloco = terra0;
-        }
-        else if (idBloco == 1) {
-            imgBloco = terra1;
-        }
-        else if (idBloco == 2) {
-            imgBloco = terra2;
-        }
-        else if (idBloco == 3) {
-            imgBloco = terra3;
-        }
-        else if (idBloco == 4) {
-            imgBloco = terra4;
-        }
-        else if (idBloco == 5) {
-            imgBloco = terra5;
-        }
-        else if (idBloco == 6) {
-            imgBloco = terra6;
-        }
-        else if (idBloco == 7) {
-            imgBloco = terra7;
-        }
-        else if (idBloco == 8) {
-            imgBloco = terra8;
-        }
-        else if (idBloco == 9) {
-            imgBloco = terra9;
-        }
-        else if (idBloco == 10) {
-            imgBloco = terra10;
-        }
-        else if (idBloco == 11) {
-            imgBloco = terra11;
-        }
-        else if (idBloco == 12) {
-            imgBloco = terra12;
-        }
-        else if (idBloco == 13) {
-            imgBloco = terra13;
-        }
-        else if (idBloco == 14) {
-            imgBloco = terra14;
-        }
-        else if (idBloco == 95) {
-            imgBloco = chegada1;
-        }
-        else if (idBloco == 96) {
-            imgBloco = chegada2;
-        }
-        else if (idBloco == 97) {
-            imgBloco = chegada3;
-        }
-        else if (idBloco == 98) {
-            imgBloco = chegada4;
-        }
-        else if (idBloco == 99) {
-            imgBloco = inicio;
-        }
-
-        else {
-            imgBloco = grama;
-        }
-
-        gfx.drawImage(imgBloco, posCol*BLOCK_SIZE, posLin*BLOCK_SIZE, null);
+    public void drawBlock(Graphics gfx, int colPos, int rowPos, int blockId){
+        gfx.drawImage(
+            images[blockId >= 0 ? blockId : GRASS],
+            colPos*BLOCK_SIZE,
+            rowPos*BLOCK_SIZE, null
+        );
     }
 
     public int RandomInRange(int aStart, int aEnd, Random aRandom){
@@ -507,8 +374,5 @@ public class Map {
         long fraction = (long)(range * aRandom.nextDouble());
         int randomNumber =  (int)(fraction + aStart);
         return randomNumber;
-
       }
-
-
 }

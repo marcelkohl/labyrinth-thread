@@ -36,7 +36,7 @@ public class Labyrinth extends JPanel {
    @Override
     public void paintComponent(Graphics gfx) {
         if (mapUpdate == MAP_UPDATE_REQUIRED){
-            generalMap.atualizaMapa(gfx);
+            generalMap.updateMap(gfx);
             mapUpdate = MAP_UPDATED;
         }
    }
